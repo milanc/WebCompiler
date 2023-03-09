@@ -4,7 +4,7 @@ A Visual Studio extension that compiles LESS, Sass Stylus, JSX, ES6 and CoffeeSc
 files.
 
 Download the extension at the
-[VS Gallery](https://visualstudiogallery.msdn.microsoft.com/3b329021-cd7a-4a01-86fc-714c2d05bb6c)
+[VS Gallery](https://marketplace.visualstudio.com/items?itemName=Failwyn.WebCompiler64)
 
 See the
 [changelog](https://github.com/failwyn/WebCompiler/blob/master/CHANGELOG.md)
