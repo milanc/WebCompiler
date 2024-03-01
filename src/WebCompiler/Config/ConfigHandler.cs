@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+
 using Newtonsoft.Json;
 
 namespace WebCompiler
@@ -11,6 +13,8 @@ namespace WebCompiler
     /// </summary>
     public class ConfigHandler
     {
+        private static ConcurrentDictionary<string, ConcurrentDictionary<string, Config>> ExtensionBasedConfigs { get; } = new ConcurrentDictionary<string, ConcurrentDictionary<string, Config>>();
+
         /// <summary>
         /// Adds a config file if no one exist or adds the specified config to an existing config file.
         /// </summary>
@@ -95,24 +99,72 @@ namespace WebCompiler
         /// Get all the config objects in the specified file.
         /// </summary>
         /// <param name="fileName">A relative or absolute file path to the configuration file.</param>
+        /// <param name="changedFile">File name of the changed file</param>
         /// <returns>A list of Config objects.</returns>
-        public static IEnumerable<Config> GetConfigs(string fileName)
+        public static IEnumerable<Config> GetConfigs(string fileName, string changedFile = null)
         {
             FileInfo file = new FileInfo(fileName);
 
             if (!file.Exists)
                 return Enumerable.Empty<Config>();
 
-            string content = File.ReadAllText(fileName);
+            var content = File.ReadAllText(fileName);
             var configs = JsonConvert.DeserializeObject<IEnumerable<Config>>(content);
-            string folder = Path.GetDirectoryName(file.FullName);
-
+            var folder = Path.GetDirectoryName(file.FullName);
+            var folderLength = folder.Length + 1;
+            var extensionConfigs = new List<Config>();
             foreach (Config config in configs)
             {
+                if (!string.IsNullOrEmpty(config.InputExtension))
+                {
+                    var cacheKey = $"{Path.GetFullPath(fileName)}-{config.InputExtension}";
+
+                    if (!ExtensionBasedConfigs.ContainsKey(cacheKey))
+                    {
+                        var files = Directory.GetFiles(folder, $"*{config.InputExtension}", SearchOption.AllDirectories);
+                        var fileConfigs = files.ToDictionary(f => f, f =>
+                        {
+                            var inputFile = f.Substring(folderLength);
+                            return new Config()
+                            {
+                                FileName = fileName,
+                                InputFile = inputFile,
+                                OutputFile = inputFile.Replace(config.InputExtension, config.OutputExtension),
+                                InputExtension = null,
+                                OutputExtension = null
+                            };
+                        });
+
+                        ExtensionBasedConfigs.TryAdd(cacheKey, new ConcurrentDictionary<string, Config>(fileConfigs));
+                    }
+                    else if (changedFile != null && !ExtensionBasedConfigs[cacheKey].ContainsKey(changedFile))
+                    {
+                        ExtensionBasedConfigs[cacheKey].TryAdd(changedFile, new Config()
+                        {
+                            FileName = fileName,
+                            InputFile = changedFile,
+                            OutputFile = changedFile.Replace(config.InputExtension, config.OutputExtension),
+                            InputExtension = null,
+                            OutputExtension = null
+                        });
+                    }
+
+                    extensionConfigs.AddRange(ExtensionBasedConfigs[cacheKey].Values);
+
+                    continue;
+                }
                 config.FileName = fileName;
             }
 
-            return configs;
+            return configs.Where(c => string.IsNullOrEmpty(c.InputExtension)).Concat(extensionConfigs);
+        }
+
+        /// <summary>
+        /// Resets the configs based on input extensions.
+        /// </summary>
+        public static void ResetExtensionBasedConfigs()
+        {
+            ExtensionBasedConfigs.Clear();
         }
     }
 }

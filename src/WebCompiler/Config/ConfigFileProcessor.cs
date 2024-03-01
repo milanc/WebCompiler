@@ -31,6 +31,11 @@ namespace WebCompiler
 
             try
             {
+                if (force)
+                {
+                    ConfigHandler.ResetExtensionBasedConfigs();
+                }
+
                 FileInfo info = new FileInfo(configFile);
                 configs = configs ?? ConfigHandler.GetConfigs(configFile);
 
@@ -107,7 +112,7 @@ namespace WebCompiler
             {
                 string folder = Path.GetDirectoryName(configFile);
                 List<CompilerResult> list = new List<CompilerResult>();
-                var configs = ConfigHandler.GetConfigs(configFile);
+                var configs = ConfigHandler.GetConfigs(configFile, sourceFile);
 
                 // Compile if the file if it's referenced directly in compilerconfig.json
                 foreach (Config config in configs)

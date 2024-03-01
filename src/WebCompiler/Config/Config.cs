@@ -24,10 +24,23 @@ namespace WebCompiler
         public string OutputFile { get; set; }
 
         /// <summary>
+        /// The extension to be used for output file - will replace the input extension.
+        /// </summary>
+        [JsonProperty("outputExtension")]
+        public string OutputExtension { get; set; }
+
+
+        /// <summary>
         /// The relative file path to the input file.
         /// </summary>
         [JsonProperty("inputFile")]
         public string InputFile { get; set; }
+
+        /// <summary>
+        /// The extension to match input files.
+        /// </summary>
+        [JsonProperty("inputExtension")]
+        public string InputExtension { get; set; }
 
         /// <summary>
         /// Settings for the minification.
