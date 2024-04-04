@@ -172,9 +172,9 @@ namespace WebCompiler
         }
 
         /// <summary>
-        /// Resets the configs based on input extensions.
+        /// Clears the configs based on input extensions.
         /// </summary>
-        public static void ResetExtensionBasedConfigs()
+        public static void ClearExtensionBasedConfigs()
         {
             ExtensionBasedConfigs.Clear();
         }

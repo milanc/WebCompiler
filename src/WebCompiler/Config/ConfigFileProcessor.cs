@@ -33,7 +33,7 @@ namespace WebCompiler
             {
                 if (force)
                 {
-                    ConfigHandler.ResetExtensionBasedConfigs();
+                    ConfigHandler.ClearExtensionBasedConfigs();
                 }
 
                 FileInfo info = new FileInfo(configFile);
